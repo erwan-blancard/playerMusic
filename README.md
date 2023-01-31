@@ -1,2 +1,2 @@
 # playerMusic
-Requiert les librairies pygame et music-tag pour fonctionner.
+Requiert les librairies pygame, music-tag et Pillow pour fonctionner.

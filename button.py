@@ -105,10 +105,10 @@ class TrueFalseButton(BaseButton):
 
 class ButtonSlider:
 
-    def __init__(self, x, y, lenght, stroke, release_command=None):
+    def __init__(self, x, y, length, stroke, release_command=None):
         self.x = x
         self.y = y
-        self.lenght = lenght
+        self.length = length
         self.stroke = stroke
         self.scroll_pos = 0
         self.mouse_inside = False
@@ -118,17 +118,25 @@ class ButtonSlider:
 
     def render(self, screen: pygame.Surface):
         # bar
-        screen.fill((255, 255, 255), (self.x, self.y, self.lenght, self.stroke))
+        screen.fill((255, 255, 255), (self.x, self.y, self.length, self.stroke))
 
         # slider
-        pygame.draw.circle(screen, (255, 255, 255), (self.x + self.lenght * self.scroll_pos, self.y + self.stroke / 2), self.stroke*2)
+        pygame.draw.circle(screen, (255, 255, 255), (self.x + self.length * self.scroll_pos, self.y + self.stroke / 2), self.stroke*2)
 
     def get_scroll_pos(self):
         return self.scroll_pos
 
+    def set_scroll_pos(self, value: float):
+        if value < 0.0:
+            self.scroll_pos = 0.0
+        elif value > 1.0:
+            self.scroll_pos = 1.0
+        else:
+            self.scroll_pos = value
+
     def mouse_input(self, event: pygame.event.Event):
         mouse_pos = pygame.mouse.get_pos()
-        if (self.x <= mouse_pos[0] <= self.x + self.lenght) and (self.y <= mouse_pos[1] <= self.y + self.stroke):
+        if (self.x <= mouse_pos[0] <= self.x + self.length) and (self.y <= mouse_pos[1] <= self.y + self.stroke):
             self.mouse_inside = True
         else:
             self.mouse_inside = False
@@ -141,12 +149,13 @@ class ButtonSlider:
             self.mouse_clicked = False
 
         if event.type == pygame.MOUSEBUTTONUP and not pygame.mouse.get_pressed()[0]:
+            if self.mouse_focus:
+                self.execute()
             self.mouse_focus = False
-            self.execute()
 
         if self.mouse_focus:
-            if self.x <= mouse_pos[0] <= self.x + self.lenght:
-                self.scroll_pos = (mouse_pos[0]-self.x)/self.lenght
+            if self.x <= mouse_pos[0] <= self.x + self.length:
+                self.scroll_pos = (mouse_pos[0]-self.x)/self.length
 
     def execute(self):
         if self.release_command is not None:
@@ -156,10 +165,10 @@ class ButtonSlider:
 # 0, 188, 255
 class ButtonSliderVertical:
 
-    def __init__(self, x, y, lenght, bar_width, bar_height, line_stroke):
+    def __init__(self, x, y, length, bar_width, bar_height, line_stroke):
         self.x = x
         self.y = y
-        self.lenght = lenght
+        self.length = length
         self.bar_width = bar_width
         self.bar_height = bar_height
         self.line_stroke = line_stroke

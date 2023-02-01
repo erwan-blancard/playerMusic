@@ -46,7 +46,7 @@ class Track:
                 self.cover = pygame.image.fromstring(data, size, mode)
             except Exception as e:
                 print("Error loading thumbnail:", e)
-            print(self.name, self.length, self.artist)
+            # print(self.name, self.length, self.artist)
 
         # for playlist
         self.broken_flag = False
@@ -71,3 +71,6 @@ class Track:
 
     def is_broken(self):
         return self.broken_flag
+
+    def __str__(self):
+        return self.name + ", " + self.artist

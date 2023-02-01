@@ -6,6 +6,7 @@ import pygame
 import text
 import tkinter.messagebox
 import tkinter.filedialog
+from scrolling_list import *
 
 pygame.init()
 pygame.font.init()
@@ -84,6 +85,7 @@ def prev_music(first_track_checked=False):
             prev_play_time = 0
         except pygame.error as e:
             print(e)
+            playlist[current_track].broken_flag = True
             if first_track_checked:
                 next_music()
             elif not current_track > 0:
@@ -105,6 +107,7 @@ def load_next_music():
             prev_play_time = 0
         except pygame.error as e:
             print(e)
+            playlist[current_track].broken_flag = True
             next_music()
 
 
@@ -113,7 +116,6 @@ def next_music():
     global playlist_active
     global music_offset
     global prev_play_time
-    # global paused_flag
     # check if there are tracks remaining
     if current_track < len(playlist) - 1:
         current_track += 1
@@ -123,13 +125,11 @@ def next_music():
             pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
         except pygame.error as e:
             print(e)
+            playlist[current_track].broken_flag = True
             next_music()
-        # paused_flag = False
     else:
-        flush_playlist()
-        # reset window caption
-        pygame.display.set_caption("Music Player")
-        # paused_flag = True
+        current_track = -1
+        next_music()
 
     music_offset = 0
     prev_play_time = 0
@@ -188,6 +188,7 @@ def start_music_player():
             pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
         except pygame.error as e:
             print(e)
+            playlist[current_track].broken_flag = True
             next_music()
 
 
@@ -213,7 +214,6 @@ def flush_playlist():
     global playlist_active
     global music_offset
     global prev_play_time
-    # mp.stop()
     paused_flag = True
     playpause_button.activated = False
     mp.unload()
@@ -223,6 +223,9 @@ def flush_playlist():
     music_offset = 0
     prev_play_time = 0
     player_slider.set_scroll_pos(0)
+    playlist_scrolling_list.scroll_bar.set_scroll_pos(0)
+    # reset window caption
+    pygame.display.set_caption("Music Player")
 
 
 def set_time_with_slider():
@@ -274,6 +277,7 @@ def render_speaker():
         elif mp.get_volume() > 0.8:
             speaker_state = 4
     screen.blit(SPEAKER_STATES[speaker_state], (screen.get_width() - 44, 64))
+
 
 # player buttons
 playpause_button = TrueFalseButton(
@@ -333,6 +337,8 @@ start_music_player_button = ButtonLabel(
 player_buttons = [playpause_button, prev_button, next_button, rewind_button, loop_button]
 playlist_menu_buttons = [add_track_button, flush_playlist_button, start_music_player_button]
 
+playlist_scrolling_list = ScrollingList(8, 48, panel_size - 16, screen.get_height() - 140)
+
 running = True
 
 while running:
@@ -355,6 +361,8 @@ while running:
         volume_slider.mouse_input(event)
         show_playlist_button.mouse_input(event)
         if show_playlist_menu:
+            if len(playlist) > 0:
+                playlist_scrolling_list.mouse_input(event)
             for button in playlist_menu_buttons:
                 button.mouse_input(event)
         else:
@@ -386,6 +394,10 @@ while running:
 
     if show_playlist_menu:
         render_playlist_menu()
+        if playlist_active:
+            playlist_scrolling_list.render(screen, playlist, FONTS[0], list_index=current_track)
+        else:
+            playlist_scrolling_list.render(screen, playlist, FONTS[0])
         for button in playlist_menu_buttons:
             button.render(screen)
 

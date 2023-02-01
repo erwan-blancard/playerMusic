@@ -356,7 +356,6 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        volume_slider.mouse_input(event)
         show_playlist_button.mouse_input(event)
         if show_playlist_menu:
             if len(playlist) > 0:
@@ -364,6 +363,7 @@ while running:
             for button in playlist_menu_buttons:
                 button.mouse_input(event)
         else:
+            volume_slider.mouse_input(event)
             if playlist_active:
                 player_slider.mouse_input(event)
             for button in player_buttons:

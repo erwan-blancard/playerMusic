@@ -1,12 +1,12 @@
 import os
 
-from track import Track
 from button import *
-import pygame
-import text
 import tkinter.messagebox
 import tkinter.filedialog
 from scrolling_list import *
+import pygame
+import text
+from track import Track
 
 pygame.init()
 pygame.font.init()
@@ -49,6 +49,19 @@ music_offset = 0
 prev_play_time = 0
 
 
+def set_track(track):
+    global music_offset
+    global prev_play_time
+    global paused_flag
+    mp.load(track.get_filepath())
+    mp.play()
+    pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
+    music_offset = 0
+    prev_play_time = 0
+    playpause_button.activated = True
+    paused_flag = False
+
+
 def resume():
     global paused_flag
     global playlist_active
@@ -71,18 +84,12 @@ def pause():
 
 # special check to prevent RecursionError
 def prev_music(first_track_checked=False):
-    global music_offset
-    global prev_play_time
     global current_track
     if len(playlist) > 0:
         if current_track > 0:
             current_track -= 1
         try:
-            mp.load(playlist[current_track].get_filepath())
-            mp.play()
-            pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
-            music_offset = 0
-            prev_play_time = 0
+            set_track(playlist[current_track])
         except pygame.error as e:
             print(e)
             playlist[current_track].broken_flag = True
@@ -101,10 +108,7 @@ def load_next_music():
         next_music()
     else:
         try:
-            mp.load(playlist[current_track].get_filepath())
-            mp.play()
-            music_offset = 0
-            prev_play_time = 0
+            set_track(playlist[current_track])
         except pygame.error as e:
             print(e)
             playlist[current_track].broken_flag = True
@@ -120,19 +124,15 @@ def next_music():
     if current_track < len(playlist) - 1:
         current_track += 1
         try:
-            mp.load(playlist[current_track].get_filepath())
-            mp.play()
-            pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
+            set_track(playlist[current_track])
         except pygame.error as e:
             print(e)
             playlist[current_track].broken_flag = True
             next_music()
-    else:
+    elif len(playlist) > 0:
+        # if end of playlist, go to first track
         current_track = -1
         next_music()
-
-    music_offset = 0
-    prev_play_time = 0
 
 
 def rewind():
@@ -183,9 +183,7 @@ def start_music_player():
 
         current_track = 0
         try:
-            mp.load(playlist[current_track].get_filepath())
-            mp.play()
-            pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
+            set_track(playlist[current_track])
         except pygame.error as e:
             print(e)
             playlist[current_track].broken_flag = True

@@ -24,6 +24,12 @@ FONTS = [
 
 DEFAULT_COVER = pygame.image.load("res/cover.png")
 
+SPEAKER_STATES = []
+for i in range(5):
+    img = pygame.image.load("res/speaker/state_" + str(i) + ".png")
+    img = pygame.transform.scale(img, (36, 36))
+    SPEAKER_STATES.append(img)
+
 mp = pygame.mixer.music
 
 playlist: list[Track] = []
@@ -256,6 +262,19 @@ def render_cover():
     screen.blit(cover, (screen.get_width()/2 - 111, 48), (0, 0, cover.get_width(), cover.get_height()))
 
 
+def render_speaker():
+    speaker_state = 0
+    if mp.get_volume() > 0:
+        if mp.get_volume() <= 0.2:
+            speaker_state = 1
+        elif mp.get_volume() <= 0.4:
+            speaker_state = 2
+        elif mp.get_volume() <= 0.8:
+            speaker_state = 3
+        elif mp.get_volume() > 0.8:
+            speaker_state = 4
+    screen.blit(SPEAKER_STATES[speaker_state], (screen.get_width() - 44, 64))
+
 # player buttons
 playpause_button = TrueFalseButton(
     screen.get_width()/2 - 24, screen.get_height() - 116, 48,
@@ -291,6 +310,11 @@ player_slider = ButtonSlider(
     16, screen.get_height() - 144, screen.get_width()-32, 4,
     release_command=lambda: set_time_with_slider()
 )
+volume_slider = ButtonSliderVertical(
+    screen.get_width() - 26, 48 + 64, 111, 4
+)
+# set volume to 1.0 - 0.3 = 0.7
+volume_slider.set_scroll_pos(0.35)
 
 # playlist menu buttons
 add_track_button = ButtonIcon(
@@ -313,6 +337,9 @@ running = True
 
 while running:
 
+    # update mp volume with volume slider
+    mp.set_volume(1.0 - volume_slider.get_scroll_pos())
+
     # update playlist
     if playlist_active:
         # update slider
@@ -325,6 +352,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        volume_slider.mouse_input(event)
         show_playlist_button.mouse_input(event)
         if show_playlist_menu:
             for button in playlist_menu_buttons:
@@ -345,6 +373,13 @@ while running:
     render_cover()
 
     player_slider.render(screen)
+    volume_slider.render(screen)
+
+    str_volume = str(int(mp.get_volume()*100))
+    text.draw_centered_text(str_volume, screen.get_width() - 24, 48 + 56 + 111 + 32, screen, FONTS[0])
+
+    render_speaker()
+
     for button in player_buttons:
         if isinstance(type(button), type(BaseButton)):
             button.render(screen)

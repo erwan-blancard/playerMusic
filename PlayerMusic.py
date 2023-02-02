@@ -16,7 +16,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((318, 512))
 pygame.display.set_caption("Music Player")
 
-SUPPORTED_FORMATS = ["mp3", "wav", "ogg", "flac", "mid"]
+SUPPORTED_FORMATS = ["mp3", "wav", "ogg", "flac", "mid", "opus"]
 
 FONTS = [
     pygame.font.SysFont("Arial", 16),
@@ -26,8 +26,8 @@ FONTS = [
 DEFAULT_COVER = pygame.image.load("res/cover.png")
 
 SPEAKER_STATES = []
-for i in range(5):
-    img = pygame.image.load("res/speaker/state_" + str(i) + ".png")
+for state in range(5):
+    img = pygame.image.load("res/speaker/state_" + str(state) + ".png")
     img = pygame.transform.scale(img, (36, 36))
     SPEAKER_STATES.append(img)
 
@@ -48,6 +48,9 @@ music_offset = 0
 # millisecs
 prev_play_time = 0
 
+# prevent mouse input when other windows pop up
+window_focus = True
+
 
 def set_track(track):
     global music_offset
@@ -55,7 +58,7 @@ def set_track(track):
     global paused_flag
     mp.load(track.get_filepath())
     mp.play()
-    pygame.display.set_caption(playlist[current_track].get_name() + ", " + playlist[current_track].get_artist() + " | " + "Music Player")
+    pygame.display.set_caption(str(playlist[current_track]) + " | " + "Music Player")
     music_offset = 0
     prev_play_time = 0
     playpause_button.activated = True
@@ -115,7 +118,8 @@ def load_next_music():
             next_music()
 
 
-def next_music():
+# special check to prevent RecursionError
+def next_music(already_cycled_once=False):
     global current_track
     global playlist_active
     global music_offset
@@ -128,11 +132,24 @@ def next_music():
         except pygame.error as e:
             print(e)
             playlist[current_track].broken_flag = True
-            next_music()
+            if already_cycled_once:
+                # finds the nearest track that isn't broken
+                all_broken = True
+                for i in range(len(playlist)):
+                    if not playlist[i].is_broken():
+                        all_broken = False
+                        current_track = i
+                        set_track(playlist[current_track])
+                        break
+                if all_broken:
+                    flush_playlist()
+
+            else:
+                next_music()
     elif len(playlist) > 0:
         # if end of playlist, go to first track
         current_track = -1
-        next_music()
+        next_music(already_cycled_once=True)
 
 
 def rewind():
@@ -191,17 +208,23 @@ def start_music_player():
 
 
 def add_to_playlist():
+    global window_focus
+    window_focus = False
     filepaths = tkinter.filedialog.askopenfilenames()
     for filepath in filepaths:
-        if os.path.splitext(filepath)[1][1:] in SUPPORTED_FORMATS:
+        if os.path.splitext(filepath)[1][1:].lower() in SUPPORTED_FORMATS:
             playlist.append(Track(filepath))
+    window_focus = True
 
 
 def ask_flush_playlist():
+    global window_focus
+    window_focus = False
     if len(playlist) > 0:
         response = tkinter.messagebox.askyesno("Confirmer", "Vider tous les titres de la playlist ?\n\nAttention: cela stoppera la lecture en cours !")
         if response:
             flush_playlist()
+    window_focus = True
 
 
 def flush_playlist():
@@ -356,18 +379,19 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        show_playlist_button.mouse_input(event)
-        if show_playlist_menu:
-            if len(playlist) > 0:
-                playlist_scrolling_list.mouse_input(event)
-            for button in playlist_menu_buttons:
-                button.mouse_input(event)
-        else:
-            volume_slider.mouse_input(event)
-            if playlist_active:
-                player_slider.mouse_input(event)
-            for button in player_buttons:
-                button.mouse_input(event)
+        if window_focus:
+            show_playlist_button.mouse_input(event)
+            if show_playlist_menu:
+                if len(playlist) > 0:
+                    playlist_scrolling_list.mouse_input(event)
+                for button in playlist_menu_buttons:
+                    button.mouse_input(event)
+            else:
+                volume_slider.mouse_input(event)
+                if playlist_active:
+                    player_slider.mouse_input(event)
+                for button in player_buttons:
+                    button.mouse_input(event)
 
     screen.fill((40, 40, 40))
 

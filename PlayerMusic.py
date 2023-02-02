@@ -7,6 +7,7 @@ from scrolling_list import *
 import pygame
 import text
 from track import Track
+import random
 
 pygame.init()
 pygame.font.init()
@@ -249,6 +250,32 @@ def flush_playlist():
     pygame.display.set_caption("Music Player")
 
 
+def shuffle_playlist():
+    global window_focus
+    global paused_flag
+    global current_track
+    global prev_play_time
+    global music_offset
+    global playlist_active
+    window_focus = False
+    if len(playlist) > 0:
+        response = tkinter.messagebox.askyesno("Mélanger les titres ?", "Mélanger l'ordre des titres de la playlist ?\n\nAttention: cela stoppera la lecture en cours !")
+        if response:
+            paused_flag = True
+            playpause_button.activated = False
+            mp.unload()
+            playlist_active = False
+            current_track = 0
+            music_offset = 0
+            prev_play_time = 0
+            player_slider.set_scroll_pos(0)
+            playlist_scrolling_list.scroll_bar.set_scroll_pos(0)
+            # reset window caption
+            pygame.display.set_caption("Music Player")
+            random.shuffle(playlist)
+    window_focus = True
+
+
 def set_time_with_slider():
     global music_offset
     global prev_play_time
@@ -354,9 +381,12 @@ start_music_player_button = ButtonLabel(
     "Lecture", panel_size / 2 - 36, screen.get_height() - 84, 72, 24,
     FONTS[1], command=lambda: start_music_player()
 )
+shuffle_playlist_button = ButtonIcon(
+    panel_size / 2 - 16, screen.get_height() - 36, 32, pygame.image.load("res/shuffle.png"), command=lambda: shuffle_playlist()
+)
 
 player_buttons = [playpause_button, prev_button, next_button, rewind_button, loop_button]
-playlist_menu_buttons = [add_track_button, flush_playlist_button, start_music_player_button]
+playlist_menu_buttons = [add_track_button, flush_playlist_button, start_music_player_button, shuffle_playlist_button]
 
 playlist_scrolling_list = ScrollingList(8, 48, panel_size - 16, screen.get_height() - 140)
 

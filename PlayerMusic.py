@@ -422,6 +422,19 @@ while running:
                     player_slider.mouse_input(event)
                 for button in player_buttons:
                     button.mouse_input(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player_buttons[player_buttons.index(playpause_button)].execute()
+                elif event.key == pygame.K_LEFT:
+                    player_buttons[player_buttons.index(prev_button)].execute()
+                elif event.key == pygame.K_RIGHT:
+                    player_buttons[player_buttons.index(next_button)].execute()
+                elif event.key == pygame.K_ESCAPE:
+                    show_playlist_button.execute()
+                elif event.key == pygame.K_UP:
+                    volume_slider.set_scroll_pos(volume_slider.get_scroll_pos() - 0.05)
+                elif event.key == pygame.K_DOWN:
+                    volume_slider.set_scroll_pos(volume_slider.get_scroll_pos() + 0.05)
 
     screen.fill((40, 40, 40))
 

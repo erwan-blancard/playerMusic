@@ -87,12 +87,15 @@ class TrueFalseButton(BaseButton):
     def mouse_input(self, event: pygame.event.Event):
         super().mouse_input(event)
         if self.mouse_inside and self.mouse_clicked:
-            if self.activated:
-                self.activated = False
-                self.exec_false_command()
-            else:
-                self.activated = True
-                self.exec_true_command()
+            self.execute()
+
+    def execute(self):
+        if self.activated:
+            self.activated = False
+            self.exec_false_command()
+        else:
+            self.activated = True
+            self.exec_true_command()
 
     def exec_false_command(self):
         if self.false_command is not None:
